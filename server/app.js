@@ -33,6 +33,35 @@ app.post('/location', async (req, res) => {
     }
   })
 
+app.put('/location', async (req,res)=>{
+    let {char,image,location} = req.body
+    try {
+        let findData = await db.collection('location').findOne({location:location})
+        let findChar = await db.collection('location').findOne({char:char})
+        console.log(findChar)
+        if(findData){
+            if(!findChar){
+                let update = await db.collection('location').updateOne({
+                    _id:findData._id,
+                },
+                    {
+                        $push:{
+                            char:char,
+                            image:image
+                        }
+                    }
+                )
+                res.status(201).json(update)
+            }
+            res.status(400).json({message:'Duplicate Character'})
+        }
+        res.status(404).json({message:'Not Found'})
+        
+    } catch (error) {
+        
+    }
+})
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
