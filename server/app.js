@@ -3,10 +3,11 @@ if(process.env.NODE_ENV !== 'production'){
   }
 const express = require('express')
 const app = express()
-const port = 3000
 const db = require('./db')
 const { ObjectId } = require("mongodb");
+const cors = require('cors')
 
+app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.get('/location', async (req, res) => {
@@ -37,8 +38,15 @@ app.put('/location', async (req,res)=>{
     let {char,image,location} = req.body
     try {
         let findData = await db.collection('location').findOne({location:location})
+        if(!findData){
+            let createLocation = await db.collection('location').insertOne({
+                _id: new ObjectId(),
+                location: location
+            })
+        }
+        findData = await db.collection('location').findOne({location:location})
         let findChar = await db.collection('location').findOne({char:char})
-        console.log(findChar)
+        console.log(char,image,location)
         if(findData){
             if(!findChar){
                 let update = await db.collection('location').updateOne({
@@ -55,13 +63,12 @@ app.put('/location', async (req,res)=>{
             }
             res.status(400).json({message:'Duplicate Character'})
         }
-        res.status(404).json({message:'Not Found'})
+        res.status(404).json({message:'Add Location First'})
         
     } catch (error) {
-        
+        console.log(error)
     }
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+
+module.exports = app
